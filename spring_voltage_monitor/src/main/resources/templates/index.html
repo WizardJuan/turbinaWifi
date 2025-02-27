@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Voltaje</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding-top: 20px;
+        }
+        .status-box {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .status-connected {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-disconnected {
+            background-color: #dc3545;
+            color: white;
+        }
+        .card {
+            background-color: #1e1e1e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="text-center my-3">Monitor de Voltaje</h2>
+
+        <div id="status" class="status-box status-disconnected">Cargando...</div>
+
+        <h3 class="mt-4">Últimos picos de voltajes registrados</h3>
+        <div id="top-voltage-list" class="row"></div>
+
+        
+    </div>
+
+    <script>
+		function actualizarEstado() {
+		    fetch('http://localhost:8080/api/voltage/status')
+		        .then(response => response.text())
+		        .then(data => {
+		            const statusElement = document.getElementById('status');
+
+		            // Buscar si hay un número en la respuesta
+		            const match = data.match(/[-+]?\d*\.?\d+/); 
+		            if (match) {
+		                let voltage = parseFloat(match[0]).toFixed(2); // Convertir a número y limitar a 2 decimales
+		                data = data.replace(match[0], voltage); // Reemplazar en el texto original
+		            }
+
+		            statusElement.innerText = data;
+		            
+		            if (data.includes("desconectado")) {
+		                statusElement.classList.remove("status-connected");
+		                statusElement.classList.add("status-disconnected");
+		            } else {
+		                statusElement.classList.remove("status-disconnected");
+		                statusElement.classList.add("status-connected");
+		            }
+		        })
+		        .catch(error => console.error('Error al obtener el estado:', error));
+		}
+
+
+        function actualizarTop5Voltajes() {
+            fetch('http://localhost:8080/api/voltage/top5')
+                .then(response => response.json())
+                .then(data => {
+                    const lista = document.getElementById('top-voltage-list');
+                    lista.innerHTML = ''; // Limpia la lista antes de actualizar
+                    data.forEach(voltage => {
+                        let card = document.createElement('div');
+                        card.className = "col-md-4 mb-3";
+                        card.innerHTML = `
+                            <div class="card p-3">
+                                <h5 class="card-title">Voltaje: ${parseFloat(voltage.voltage).toFixed(2)}V</h5>
+								<h5 class="card-title">Fecha: ${voltage.timestamp}</h5>
+                            </div>
+                        `;
+                        lista.appendChild(card);
+                    });
+                })
+                .catch(error => console.error('Error al obtener los voltajes:', error));
+        }
+
+        
+
+        setInterval(() => {
+            actualizarEstado();
+            actualizarTop5Voltajes();
+            
+        }, 5000); // Actualiza cada 5 segundos
+
+        actualizarEstado();
+        actualizarTop5Voltajes();
+        
+    </script>
+
+</body>
+</html>
+
+

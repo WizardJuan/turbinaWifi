@@ -1,0 +1,7 @@
+com\example\demo\controlador\VoltageController.class
+com\example\demo\modelo\VoltageRequest.class
+com\example\demo\controlador\EspController.class
+com\example\demo\modelo\Voltage.class
+com\example\demo\repository\VoltageRepository.class
+com\example\demo\controlador\HomeController.class
+com\example\demo\VoltageApplication.class
